@@ -53,7 +53,7 @@ public class MovieCatalogService {
 		LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . Before rating service");
 //		UserRating userRating = restTemplate.getForObject("http://ratings-data-service/ratingsdata/users/{userId}", UserRating.class,userId);
 //		UserRating userRating = restTemplate.getForObject("http://localhost:8083/ratingsdata/users/{userId}", UserRating.class,userId);
-		UserRating userRating = restTemplate.getForObject("http://rating/ratingsdata/users/{userId}", UserRating.class,userId);
+		UserRating userRating = restTemplate.getForObject("http://rating:8083/ratingsdata/users/{userId}", UserRating.class,userId);
 		LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . After Rating Service");
 		
 //		System.out.println("span.context() = " +span.context());
@@ -80,7 +80,7 @@ public class MovieCatalogService {
 			LOGGER.info(".....................................................Before movie-info-service");
 //			Movie movie = restTemplate.getForObject("http://movie-info-service/movies/{movieId}", Movie.class,rating.getMovieId());
 //			Movie movie = restTemplate.getForObject("http://localhost:8082/movies/{movieId}", Movie.class,rating.getMovieId());
-			Movie movie = restTemplate.getForObject("http://info/movies/{movieId}", Movie.class,rating.getMovieId());
+			Movie movie = restTemplate.getForObject("http://info/movies:8082/{movieId}", Movie.class,rating.getMovieId());
 			LOGGER.info(".....................................................After movie-info-service");
 			return new CatalogItem(movie.getName(),"Desc = "+rating.getMovieId(),rating.getRating());
 		})
