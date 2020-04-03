@@ -80,7 +80,7 @@ public class MovieCatalogService {
 			LOGGER.info(".....................................................Before movie-info-service");
 //			Movie movie = restTemplate.getForObject("http://movie-info-service/movies/{movieId}", Movie.class,rating.getMovieId());
 //			Movie movie = restTemplate.getForObject("http://localhost:8082/movies/{movieId}", Movie.class,rating.getMovieId());
-			Movie movie = restTemplate.getForObject("http://info/movies:8082/{movieId}", Movie.class,rating.getMovieId());
+			Movie movie = restTemplate.getForObject("http://info:8082/movies/{movieId}", Movie.class,rating.getMovieId());
 			LOGGER.info(".....................................................After movie-info-service");
 			return new CatalogItem(movie.getName(),"Desc = "+rating.getMovieId(),rating.getRating());
 		})
