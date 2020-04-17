@@ -1,0 +1,41 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<title>Insert title here</title>
+</head>
+<body>
+<div class="container">
+<p>This is home.jsp ${a} ${b} ${c}  </p>
+
+	
+    <div class="form-group">
+      <label for="userInp">Name:</label>
+      <input type="text" class="form-control" id="userInp" name="username">
+    </div>
+    <button id="traceCall" class="btn btn-primary">Send</button>
+    <div class="form-group">
+      <label for="result">Comment:</label>
+      <textarea class="form-control" rows="5" id="result"></textarea>
+    </div>
+    
+  
+
+</div>
+
+
+<script src="home.js"></script>
+
+
+
+
+
+</body>
+</html>

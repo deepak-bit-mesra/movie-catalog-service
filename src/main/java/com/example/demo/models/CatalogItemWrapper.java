@@ -5,6 +5,13 @@ import java.util.List;
 public class CatalogItemWrapper {
 	private List<CatalogItem> catalogItems;
 	private TraceInfo traceInfo;
+	private String userId;
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
 	public CatalogItemWrapper() {
 		super();
 		// TODO Auto-generated constructor stub
