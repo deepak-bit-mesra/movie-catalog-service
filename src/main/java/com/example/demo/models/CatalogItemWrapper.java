@@ -29,6 +29,12 @@ public class CatalogItemWrapper {
 	public void setTraceInfo(TraceInfo traceInfo) {
 		this.traceInfo = traceInfo;
 	}
+	public CatalogItemWrapper(List<CatalogItem> catalogItems, TraceInfo traceInfo, String userId) {
+		super();
+		this.catalogItems = catalogItems;
+		this.traceInfo = traceInfo;
+		this.userId = userId;
+	}
 	
 	
 	

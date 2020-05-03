@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,63 +54,44 @@ public class MovieCatalogService {
 	
 	Logger LOGGER = LoggerFactory.getLogger(MovieCatalogService.class);
 	
-	
-	
-	
-	
-	@RequestMapping("/{userId}")
-	public CatalogItemWrapper getCatalog(@PathVariable("userId") String userId){
-		LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . Before rating service");
-		LOGGER.info("ratingPort = "+ ratingPort);
-		LOGGER.info("infoPort = "+ infoPort);
-		UserRating userRating = restTemplate.getForObject("http://"+ ratingServiceName +":"+ ratingPort +"/ratingsdata/users/{userId}", UserRating.class,userId);
-		LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . After Rating Service");
-		List<Rating> ratings = userRating.getUserRating();
-		List<CatalogItem> catalogItems=  ratings.stream().map(rating -> {
-			LOGGER.info(".....................................................Before movie-info-service");
-			Movie movie = restTemplate.getForObject("http://"+ infoServiceName +":"+ infoPort +"/movies/{movieId}", Movie.class,rating.getMovieId());
-//			java -jar movie-catalog-service-0.0.1-SNAPSHOT.jar --spring.profiles.active=default
-			LOGGER.info(".....................................................After movie-info-service");
-			return new CatalogItem(movie.getName(),"Desc = "+rating.getMovieId(),rating.getRating());
-		})
-		.collect(Collectors.toList());
-		
-//		-----------------------------  Sending CatalogItemWrapper as Response ------------------
-		
-		CatalogItemWrapper catalogItemWrapper = new CatalogItemWrapper();
-		TraceInfo traceInfo = new TraceInfo(tracer.currentSpan());
-		traceInfo.setSpanIdStr(tracer.currentSpan().context().traceIdString());
-		traceInfo.setTraceIdStr(tracer.currentSpan().context().spanIdString());
-		catalogItemWrapper.setCatalogItems(catalogItems);
-		catalogItemWrapper.setTraceInfo(traceInfo);
-		return catalogItemWrapper;
-	}
-
-
-	
-	
-	
-	
-	
-	
 
 	@RequestMapping("/trace/{userId}")
 	public ResponseEntity<Object> getResponseEntity(@PathVariable("userId") String userId){
-		LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . Before rating service");
-	//	UserRating userRating = restTemplate.getForObject("http://ratings-data-service/ratingsdata/users/{userId}", UserRating.class,userId);
-		UserRating userRating = restTemplate.getForObject("http://"+ ratingServiceName +":"+ ratingPort +"/ratingsdata/users/{userId}", UserRating.class,userId);
-	//	UserRating userRating = restTemplate.getForObject("http://rating:8083/ratingsdata/users/{userId}", UserRating.class,userId);
-		LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . After Rating Service");
-		List<Rating> ratings = userRating.getUserRating();
-		List<CatalogItem> catalogItems=  ratings.stream().map(rating -> {
-			LOGGER.info(".....................................................Before movie-info-service");
-	//		Movie movie = restTemplate.getForObject("http://movie-info-service/movies/{movieId}", Movie.class,rating.getMovieId());
-	//		Movie movie = restTemplate.getForObject("http://info:8082/movies/{movieId}", Movie.class,rating.getMovieId());
-			Movie movie = restTemplate.getForObject("http://"+ infoServiceName +":"+ infoPort +"/movies/{movieId}", Movie.class,rating.getMovieId());
-			LOGGER.info(".....................................................After movie-info-service");
-			return new CatalogItem(movie.getName(),"Desc = "+rating.getMovieId(),rating.getRating());
-		})
-		.collect(Collectors.toList());
+		CatalogItemWrapper catalogItemWrapper = new CatalogItemWrapper();
+		
+		try {
+			
+			LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . Before rating service");
+			UserRating userRating = restTemplate.getForObject("http://"+ ratingServiceName +":"+ ratingPort +"/ratingsdata/users/{userId}", UserRating.class,userId);
+			LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . After Rating Service");
+			List<Rating> ratings = userRating.getUserRating();
+			List<CatalogItem> catalogItems=  ratings.stream().map(rating -> {
+				LOGGER.info(".....................................................Before movie-info-service");
+				Movie movie = restTemplate.getForObject("http://"+ infoServiceName +":"+ infoPort +"/movies/{movieId}", Movie.class,rating.getMovieId());
+				LOGGER.info(".....................................................After movie-info-service");
+				return new CatalogItem(movie.getName(),"Desc = "+rating.getMovieId(),rating.getRating());
+			})
+			.collect(Collectors.toList());
+			
+			catalogItemWrapper.setCatalogItems(catalogItems);
+			catalogItemWrapper.setUserId(userId);
+		}
+		catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+		}
+		
+//		------------------------------- Adding Response Headers For Sending TraceId in Headers ------------------------
+			TraceInfo traceInfo = new TraceInfo(tracer.currentSpan());
+			catalogItemWrapper.setTraceInfo(traceInfo);
+			HttpHeaders headers = new HttpHeaders();
+			System.out.println(tracer.currentSpan().context());
+			headers.add("X-B3-TraceId", tracer.currentSpan().context().traceIdString());
+			headers.add("X-B3-SpanId", tracer.currentSpan().context().spanIdString());
+			ResponseEntity<Object> responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(headers).contentType(MediaType.parseMediaType("application/json")).body(catalogItemWrapper);
+			return responseEntity;
+			
+			
+			
 		
 	//	-----------------------------  Sending CatalogItemWrapper as Response ------------------
 	//	CatalogItemWrapper catalogItemWrapper = new CatalogItemWrapper();
@@ -132,17 +114,7 @@ public class MovieCatalogService {
 		
 				
 		
-	//	------------------------------- Adding Response Headers For Sending TraceId in Headers ------------------------
-		CatalogItemWrapper catalogItemWrapper = new CatalogItemWrapper();
-		TraceInfo traceInfo = new TraceInfo(tracer.currentSpan());
-		catalogItemWrapper.setCatalogItems(catalogItems);
-		catalogItemWrapper.setTraceInfo(traceInfo);
-		catalogItemWrapper.setUserId(userId);
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("X-B3-TraceId", tracer.currentSpan().context().traceIdString());
-		headers.add("X-B3-SpanId", tracer.currentSpan().context().spanIdString());
-		ResponseEntity<Object> responseEntity = ResponseEntity.ok().headers(headers).contentType(MediaType.parseMediaType("application/json")).body(catalogItemWrapper);
-		return responseEntity;
+	
 		
 	}
 
