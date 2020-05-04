@@ -54,13 +54,15 @@ public class MovieCatalogService {
 	
 	Logger LOGGER = LoggerFactory.getLogger(MovieCatalogService.class);
 	
+	
 
 	@RequestMapping("/trace/{userId}")
 	public ResponseEntity<Object> getResponseEntity(@PathVariable("userId") String userId){
+		ResponseEntity<Object> responseEntity;
 		CatalogItemWrapper catalogItemWrapper = new CatalogItemWrapper();
 		
 		try {
-			
+//			------------------------------- BUSINESS LOGIC  -------------------------------
 			LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . Before rating service");
 			UserRating userRating = restTemplate.getForObject("http://"+ ratingServiceName +":"+ ratingPort +"/ratingsdata/users/{userId}", UserRating.class,userId);
 			LOGGER.info(". . . . . . . . . . . . . . . .  . . . . . . After Rating Service");
@@ -75,20 +77,30 @@ public class MovieCatalogService {
 			
 			catalogItemWrapper.setCatalogItems(catalogItems);
 			catalogItemWrapper.setUserId(userId);
+			
+//			------------------------------- Adding Response Headers For Sending TraceId in Headers ------------------------
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("X-B3-TraceId", tracer.currentSpan().context().traceIdString());
+			headers.add("X-B3-SpanId", tracer.currentSpan().context().spanIdString());
+			responseEntity = ResponseEntity.status(HttpStatus.OK).headers(headers).contentType(MediaType.parseMediaType("application/json")).body(catalogItemWrapper);
+			return responseEntity;
+			
+			
+			
+			
 		}
 		catch(Exception ex) {
 			LOGGER.error(ex.getMessage());
-		}
-		
-//		------------------------------- Adding Response Headers For Sending TraceId in Headers ------------------------
-			TraceInfo traceInfo = new TraceInfo(tracer.currentSpan());
-			catalogItemWrapper.setTraceInfo(traceInfo);
+//			------------------------------- Adding Response Headers For Sending TraceId in Headers ------------------------
 			HttpHeaders headers = new HttpHeaders();
-			System.out.println(tracer.currentSpan().context());
 			headers.add("X-B3-TraceId", tracer.currentSpan().context().traceIdString());
 			headers.add("X-B3-SpanId", tracer.currentSpan().context().spanIdString());
-			ResponseEntity<Object> responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(headers).contentType(MediaType.parseMediaType("application/json")).body(catalogItemWrapper);
+			responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(headers).contentType(MediaType.parseMediaType("application/json")).body(catalogItemWrapper);
 			return responseEntity;
+			
+		}
+		
+
 			
 			
 			
